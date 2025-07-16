@@ -1,12 +1,11 @@
 import 'dart:convert';
 import 'package:my_project/account.dart';
-import 'package:my_project/nifty.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:fl_chart/fl_chart.dart';
 
 void main() {
-  runApp(const StockTrackerApp());
+  runApp(StockTrackerApp());
 }
 
 class StockTrackerApp extends StatelessWidget {
@@ -20,7 +19,7 @@ class StockTrackerApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white, // Set the background color here
       ),
-      home: const StockHomePage(),
+      home: StockHomePage(),
     );
   }
 }
@@ -91,7 +90,7 @@ class StockHomePageState extends State<StockHomePage> {
   Widget buildChart() {
     return LineChart(
       LineChartData(
-        titlesData: const FlTitlesData(show: false),
+        titlesData: FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
         lineBarsData: [
           LineChartBarData(
@@ -128,7 +127,7 @@ class StockHomePageState extends State<StockHomePage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            const DrawerHeader(
+            DrawerHeader(
               decoration: BoxDecoration(color: Colors.blue),
               child: Text(
                 'Drawer Header',
@@ -136,26 +135,18 @@ class StockHomePageState extends State<StockHomePage> {
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.account_circle),
-              title: const Text('Account'),
+              leading: Icon(Icons.account_circle),
+              title: Text('Account'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AccountPage()),
+                  MaterialPageRoute(builder: (context) => AccountPage()),
                 );
               },
-            ),
-            ListTile(
-              leading: const Icon(Icons.show_chart),
-              title: const Text('Nifty 50'),
-              onTap: () {
-                Navigator.pop(context); // Close the drawer
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const NiftyChart()),
-                );
-              },
+              // ListTile(leading: Icon(Icons.settings), title: Text('Settings'), onTap: () { ... }),
+              // ListTile(leading: Icon(Icons.help), title: Text('Help'), onTap: () { ... }),
+              // ...
             ),
           ],
         ),
@@ -168,7 +159,7 @@ class StockHomePageState extends State<StockHomePage> {
               controller: _controller,
               onSubmitted: (value) =>
                   fetchStockData(_controller.text.trim().toUpperCase()),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Enter Stock Symbol (e.g. AAPL)',
                 border: OutlineInputBorder(),
               ),
@@ -181,9 +172,9 @@ class StockHomePageState extends State<StockHomePage> {
             ),
             SizedBox(height: 20),
             if (_isLoading)
-              const CircularProgressIndicator()
+              CircularProgressIndicator()
             else if (_error.isNotEmpty)
-              Text(_error, style: const TextStyle(color: Colors.red))
+              Text(_error, style: TextStyle(color: Colors.red))
             else if (_graphPoints.isNotEmpty)
               Expanded(
                 child: Column(
