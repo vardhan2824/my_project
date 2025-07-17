@@ -1,201 +1,114 @@
-import 'dart:convert';
-import 'package:my_project/account.dart';
-import 'package:my_project/nifty.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:fl_chart/fl_chart.dart';
+import 'account.dart';
+import 'student_list.dart';
+import 'attendance.dart';
 
-void main() {
-  runApp(const StockTrackerApp());
-}
+void main() => runApp(const StudentApp());
 
-class StockTrackerApp extends StatelessWidget {
-  const StockTrackerApp({super.key});
+class StudentApp extends StatelessWidget {
+  const StudentApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Stock Tracker',
+      title: 'Student Dashboard',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Colors.white, // Set the background color here
-      ),
-      home: const StockHomePage(),
-    );
-  }
-}
-
-class StockHomePage extends StatefulWidget {
-  const StockHomePage({super.key});
-  @override
-  StockHomePageState createState() => StockHomePageState();
-}
-
-class StockHomePageState extends State<StockHomePage> {
-  final TextEditingController _controller = TextEditingController();
-  List<FlSpot> _graphPoints = [];
-  bool _isLoading = false;
-  String _error = '';
-  String _symbol = '';
-
-  Future<void> fetchStockData(String symbol) async {
-    setState(() {
-      _isLoading = true;
-      _error = '';
-      _graphPoints = [];
-    });
-
-    final apiKey =
-        'YOUR_ACTUAL_API_KEY'; // Replace with your Alpha Vantage API key
-    final url = Uri.parse(
-      'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=$symbol&interval=5min&apikey=$apiKey',
-    );
-
-    try {
-      final response = await http.get(url);
-      final data = jsonDecode(response.body);
-
-      if (data.containsKey('Note') || data.containsKey('Error Message')) {
-        setState(() {
-          _error = 'Error: ${data['Note'] ?? data['Error Message']}';
-          _isLoading = false;
-        });
-        return;
-      }
-
-      final timeSeries = data['Time Series (5min)'] as Map<String, dynamic>;
-      final entries = timeSeries.entries.toList().take(30).toList().reversed;
-
-      List<FlSpot> points = [];
-      int index = 0;
-
-      for (var entry in entries) {
-        final close = double.tryParse(entry.value['4. close']) ?? 0;
-        points.add(FlSpot(index.toDouble(), close));
-        index++;
-      }
-
-      setState(() {
-        _symbol = symbol;
-        _graphPoints = points;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = 'Failed to fetch data.';
-        _isLoading = false;
-      });
-    }
-  }
-
-  Widget buildChart() {
-    return LineChart(
-      LineChartData(
-        titlesData: const FlTitlesData(show: false),
-        borderData: FlBorderData(show: false),
-        lineBarsData: [
-          LineChartBarData(
-            spots: _graphPoints,
-            isCurved: true,
-            color: Colors.blue, // ✅ correct
-            barWidth: 2,
-            belowBarData: BarAreaData(show: false),
+        scaffoldBackgroundColor: Colors.white,
+        useMaterial3: true,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0.5,
+          titleTextStyle: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
           ),
-        ],
+        ),
+        listTileTheme: const ListTileThemeData(
+          iconColor: Colors.black87,
+          textColor: Colors.black87,
+        ),
       ),
+      home: const HomePage(),
     );
   }
+}
+
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int selectedIndex = 0;
+
+  final List<Widget> screens = const [
+    AccountScreen(),
+    StudentListScreen(),
+    AttendanceScreen(),
+  ];
+
+  final List<String> titles = ['Account', 'Student List', 'Attendance'];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Center(child: Text('Smart Trade')),
-        backgroundColor: Colors.lightBlueAccent, // Slight cyan sky blue
-        iconTheme: const IconThemeData(
-          color: Colors.white, // Optional: Set icon color if needed
-        ),
-        titleTextStyle: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ), // Example styling
-        shape: const RoundedRectangleBorder(
-          //Optional: Example of adding rounded corners
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-        ),
-      ),
+      appBar: AppBar(title: Text(titles[selectedIndex]), centerTitle: true),
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Text(
-                'Drawer Header',
-                style: TextStyle(color: Colors.white, fontSize: 24),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.account_circle),
-              title: const Text('Account'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AccountPage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.show_chart),
-              title: const Text('Nifty 50'),
-              onTap: () {
-                Navigator.pop(context); // Close the drawer
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const NiftyChart()),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(
-              controller: _controller,
-              onSubmitted: (value) =>
-                  fetchStockData(_controller.text.trim().toUpperCase()),
-              decoration: const InputDecoration(
-                labelText: 'Enter Stock Symbol (e.g. AAPL)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () =>
-                  fetchStockData(_controller.text.trim().toUpperCase()),
-              child: const Text('Get Data'),
-            ),
-            SizedBox(height: 20),
-            if (_isLoading)
-              const CircularProgressIndicator()
-            else if (_error.isNotEmpty)
-              Text(_error, style: const TextStyle(color: Colors.red))
-            else if (_graphPoints.isNotEmpty)
-              Expanded(
-                child: Column(
-                  children: [
-                    Text('$_symbol - Recent Prices'),
-                    SizedBox(height: 300, child: buildChart()),
-                  ],
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(16, 60, 16, 24),
+              color: Colors.white,
+              child: const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Drawer Header',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ),
+            ),
+            const Divider(
+              thickness: 2,
+              height: 0,
+              color: Colors.black12,
+              indent: 12,
+              endIndent: 12,
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.person_outline),
+              title: const Text('Account'),
+              onTap: () {
+                setState(() => selectedIndex = 0);
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.school_outlined),
+              title: const Text('Student List'),
+              onTap: () {
+                setState(() => selectedIndex = 1);
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.check_circle_outline),
+              title: const Text('Attendance'),
+              onTap: () {
+                setState(() => selectedIndex = 2);
+                Navigator.pop(context);
+              },
+            ),
           ],
         ),
       ),
+      body: screens[selectedIndex],
     );
   }
 }
