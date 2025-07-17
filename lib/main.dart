@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'account.dart';
 import 'student_list.dart';
+import 'login.dart';
 import 'attendance.dart';
 
 void main() => runApp(const StudentApp());
@@ -13,6 +14,8 @@ class StudentApp extends StatelessWidget {
     return MaterialApp(
       title: 'Student Dashboard',
       debugShowCheckedModeBanner: false,
+
+      // ✅ Define theme here only
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
         useMaterial3: true,
@@ -31,7 +34,15 @@ class StudentApp extends StatelessWidget {
           textColor: Colors.black87,
         ),
       ),
-      home: const HomePage(),
+
+      // ✅ Put these outside the theme
+      //home: const LoginPage(),
+      home: const HomePage(), // If you want to switch after login
+      routes: {
+        '/account': (context) => const AccountScreen(),
+        '/student_list': (context) => const StudentListScreen(),
+        '/attendance': (context) => const AttendanceScreen(),
+      },
     );
   }
 }
